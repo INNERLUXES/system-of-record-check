@@ -1,0 +1,39 @@
+{
+  "name": "built-in defaults",
+  "modes": [
+    "api",
+    "batch",
+    "event",
+    "file",
+    "manual",
+    "cdc",
+    "etl"
+  ],
+  "emptyValues": [
+    "tbd",
+    "tba",
+    "todo",
+    "none",
+    "n a",
+    "na",
+    "unknown",
+    "unassigned",
+    "nobody",
+    "no one",
+    "not assigned"
+  ],
+  "systemOwner": [
+    "team",
+    "contact"
+  ],
+  "rules": {
+    "missingOwner": "error",
+    "conflictingOwner": "error",
+    "writeBack": "error",
+    "unfedCopy": "warning",
+    "unknownReference": "error",
+    "circularSync": "warning",
+    "systemWithoutOwner": "warning"
+  },
+  "minSeverity": "notice"
+}

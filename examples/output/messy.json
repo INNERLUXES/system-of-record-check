@@ -1,0 +1,864 @@
+{
+  "tool": "system-of-record-check",
+  "version": "1.0.0",
+  "input": {
+    "path": "examples/messy/integration-map.yaml",
+    "format": "YAML"
+  },
+  "config": {
+    "file": null,
+    "name": null,
+    "modes": [
+      "api",
+      "batch",
+      "event",
+      "file",
+      "manual",
+      "cdc",
+      "etl"
+    ],
+    "systemOwner": [
+      "team",
+      "contact"
+    ],
+    "minSeverity": "notice",
+    "rules": [
+      {
+        "id": "missing-owner",
+        "key": "missingOwner",
+        "level": "error",
+        "rule": "an entity held by two or more systems that no system claims with \"owns: true\", or a field held by two or more systems that no system claims and the owner of its entity does not hold"
+      },
+      {
+        "id": "conflicting-owner",
+        "key": "conflictingOwner",
+        "level": "error",
+        "rule": "an entity that two or more systems claim with \"owns: true\", or a field that two or more systems name in \"owns\""
+      },
+      {
+        "id": "write-back",
+        "key": "writeBack",
+        "level": "error",
+        "rule": "a flow, or the return way of a two-way flow, that carries a field held by both its ends whose one owner is not the system it comes from, unless the flow has an exception with a reason that is not empty or one of \"tbd\", \"tba\", \"todo\""
+      },
+      {
+        "id": "unfed-copy",
+        "key": "unfedCopy",
+        "level": "warning",
+        "rule": "a field with one owner, held by another system that is not the target of any flow from the owner that carries the field"
+      },
+      {
+        "id": "unknown-reference",
+        "key": "unknownReference",
+        "level": "error",
+        "rule": "a flow whose source or target is not a system of the map, whose entity no system holds or one of its ends does not hold, or whose fields one of its ends does not hold"
+      },
+      {
+        "id": "circular-sync",
+        "key": "circularSync",
+        "level": "warning",
+        "rule": "a field that flows from one system to another and back, through a two-way flow or two one-way flows, with no approved exception among them"
+      },
+      {
+        "id": "system-without-owner",
+        "key": "systemWithoutOwner",
+        "level": "warning",
+        "rule": "a system whose team or contact is missing, empty or a value that names no one"
+      }
+    ]
+  },
+  "map": {
+    "name": "Fernbrook Supply integration map",
+    "format": "YAML",
+    "systems": [
+      {
+        "id": "crm",
+        "name": "Sales CRM",
+        "kind": "crm",
+        "team": "Sales operations",
+        "contact": "sales-ops channel",
+        "entities": [
+          "customer"
+        ]
+      },
+      {
+        "id": "legacy-crm",
+        "name": "Old CRM, still used by the trade counter",
+        "kind": "crm",
+        "team": null,
+        "contact": "TBD",
+        "entities": [
+          "customer"
+        ]
+      },
+      {
+        "id": "erp",
+        "name": "Finance ERP",
+        "kind": "erp",
+        "team": "Finance systems",
+        "contact": "finance-systems channel",
+        "entities": [
+          "customer",
+          "product",
+          "order",
+          "invoice"
+        ]
+      },
+      {
+        "id": "shop",
+        "name": "Web shop",
+        "kind": "commerce",
+        "team": "Digital commerce",
+        "contact": "web-shop channel",
+        "entities": [
+          "customer",
+          "product",
+          "order"
+        ]
+      },
+      {
+        "id": "wms",
+        "name": "Warehouse system",
+        "kind": "warehouse",
+        "team": "Warehouse operations",
+        "contact": null,
+        "entities": [
+          "product",
+          "order"
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "entity": "customer",
+        "owner": null,
+        "claims": [
+          "crm",
+          "legacy-crm"
+        ],
+        "holders": [
+          "crm",
+          "legacy-crm",
+          "erp",
+          "shop"
+        ],
+        "fields": [
+          {
+            "field": "accountNumber",
+            "owner": null,
+            "owners": [
+              "crm",
+              "legacy-crm"
+            ],
+            "holders": [
+              "crm",
+              "legacy-crm",
+              "erp"
+            ]
+          },
+          {
+            "field": "legalName",
+            "owner": null,
+            "owners": [
+              "crm",
+              "legacy-crm"
+            ],
+            "holders": [
+              "crm",
+              "legacy-crm",
+              "erp"
+            ]
+          },
+          {
+            "field": "email",
+            "owner": "crm",
+            "owners": [
+              "crm"
+            ],
+            "holders": [
+              "crm",
+              "shop"
+            ]
+          },
+          {
+            "field": "phone",
+            "owner": null,
+            "owners": [
+              "crm",
+              "legacy-crm"
+            ],
+            "holders": [
+              "crm",
+              "legacy-crm"
+            ]
+          },
+          {
+            "field": "creditLimit",
+            "owner": "erp",
+            "owners": [
+              "erp"
+            ],
+            "holders": [
+              "crm",
+              "erp"
+            ]
+          }
+        ]
+      },
+      {
+        "entity": "product",
+        "owner": null,
+        "claims": [],
+        "holders": [
+          "erp",
+          "shop",
+          "wms"
+        ],
+        "fields": [
+          {
+            "field": "sku",
+            "owner": "erp",
+            "owners": [
+              "erp"
+            ],
+            "holders": [
+              "erp",
+              "shop",
+              "wms"
+            ]
+          },
+          {
+            "field": "name",
+            "owner": "erp",
+            "owners": [
+              "erp"
+            ],
+            "holders": [
+              "erp",
+              "shop",
+              "wms"
+            ]
+          },
+          {
+            "field": "listPrice",
+            "owner": null,
+            "owners": [
+              "erp",
+              "shop"
+            ],
+            "holders": [
+              "erp",
+              "shop"
+            ]
+          },
+          {
+            "field": "description",
+            "owner": "shop",
+            "owners": [
+              "shop"
+            ],
+            "holders": [
+              "shop"
+            ]
+          },
+          {
+            "field": "weight",
+            "owner": null,
+            "owners": [],
+            "holders": [
+              "wms"
+            ]
+          },
+          {
+            "field": "stockLevel",
+            "owner": null,
+            "owners": [],
+            "holders": [
+              "wms"
+            ]
+          }
+        ]
+      },
+      {
+        "entity": "order",
+        "owner": "shop",
+        "claims": [
+          "shop"
+        ],
+        "holders": [
+          "erp",
+          "shop",
+          "wms"
+        ],
+        "fields": [
+          {
+            "field": "number",
+            "owner": "shop",
+            "owners": [
+              "shop"
+            ],
+            "holders": [
+              "erp",
+              "shop",
+              "wms"
+            ]
+          },
+          {
+            "field": "total",
+            "owner": "shop",
+            "owners": [
+              "shop"
+            ],
+            "holders": [
+              "erp",
+              "shop"
+            ]
+          },
+          {
+            "field": "shippingAddress",
+            "owner": null,
+            "owners": [],
+            "holders": [
+              "erp",
+              "wms"
+            ]
+          }
+        ]
+      },
+      {
+        "entity": "invoice",
+        "owner": "erp",
+        "claims": [
+          "erp"
+        ],
+        "holders": [
+          "erp"
+        ],
+        "fields": [
+          {
+            "field": "number",
+            "owner": "erp",
+            "owners": [
+              "erp"
+            ],
+            "holders": [
+              "erp"
+            ]
+          },
+          {
+            "field": "total",
+            "owner": "erp",
+            "owners": [
+              "erp"
+            ],
+            "holders": [
+              "erp"
+            ]
+          },
+          {
+            "field": "dueDate",
+            "owner": "erp",
+            "owners": [
+              "erp"
+            ],
+            "holders": [
+              "erp"
+            ]
+          }
+        ]
+      }
+    ],
+    "flows": [
+      {
+        "id": "customer-crm-to-erp",
+        "source": "crm",
+        "target": "erp",
+        "entity": "customer",
+        "fields": [
+          "accountNumber",
+          "legalName"
+        ],
+        "direction": "one-way",
+        "mode": "event",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "credit-sync",
+        "source": "erp",
+        "target": "crm",
+        "entity": "customer",
+        "fields": [
+          "creditLimit"
+        ],
+        "direction": "two-way",
+        "mode": "api",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "email-crm-to-shop",
+        "source": "crm",
+        "target": "shop",
+        "entity": "customer",
+        "fields": [
+          "email"
+        ],
+        "direction": "one-way",
+        "mode": "api",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "email-shop-to-crm",
+        "source": "shop",
+        "target": "crm",
+        "entity": "customer",
+        "fields": [
+          "email"
+        ],
+        "direction": "one-way",
+        "mode": "api",
+        "exception": {
+          "reason": "TBD",
+          "approvedBy": null
+        },
+        "approved": false
+      },
+      {
+        "id": "product-erp-to-shop",
+        "source": "erp",
+        "target": "shop",
+        "entity": "product",
+        "fields": [
+          "sku",
+          "name"
+        ],
+        "direction": "one-way",
+        "mode": "batch",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "order-shop-to-erp",
+        "source": "shop",
+        "target": "erp",
+        "entity": "order",
+        "fields": [
+          "number",
+          "total"
+        ],
+        "direction": "one-way",
+        "mode": "event",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "order-erp-to-wms",
+        "source": "erp",
+        "target": "wms",
+        "entity": "order",
+        "fields": [
+          "number",
+          "shippingAddress"
+        ],
+        "direction": "one-way",
+        "mode": "batch",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "stock-wms-to-shop",
+        "source": "wms",
+        "target": "shop",
+        "entity": "product",
+        "fields": [
+          "stockLevel"
+        ],
+        "direction": "one-way",
+        "mode": "event",
+        "exception": null,
+        "approved": false
+      },
+      {
+        "id": "invoice-erp-to-billing",
+        "source": "erp",
+        "target": "billing",
+        "entity": "invoice",
+        "fields": [
+          "number",
+          "total"
+        ],
+        "direction": "one-way",
+        "mode": "file",
+        "exception": null,
+        "approved": false
+      }
+    ],
+    "counts": {
+      "systems": 5,
+      "systemsWithoutOwner": 2,
+      "entities": 4,
+      "fields": 17,
+      "shared": {
+        "all": 11,
+        "owned": 6,
+        "unowned": 1,
+        "conflicting": 4
+      },
+      "flows": 9,
+      "modes": {
+        "event": 3,
+        "api": 3,
+        "batch": 2,
+        "file": 1
+      },
+      "twoWay": 1,
+      "approved": 0
+    }
+  },
+  "findings": [
+    {
+      "rule": "conflicting-owner",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 22,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:22",
+      "found": "the entity customer is claimed as owned by 2 systems, crm and legacy-crm; name one system of record",
+      "basis": [
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        },
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        }
+      ],
+      "own": "a claim on a field comes before a claim on its entity, so a field owner inside an entity owned by another system is not a conflict"
+    },
+    {
+      "rule": "missing-owner",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 33,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:33",
+      "found": "the entity product is held by 3 systems, erp, shop and wms, and none owns it; mark its system of record with \"owns: true\"",
+      "basis": [
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        },
+        {
+          "text": "organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them",
+          "source": "Master data management (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Master_data_management"
+        }
+      ],
+      "own": "an entity held by two or more systems needs an owner of its own even when each of its fields has one, because someone must decide which record is the customer; a field is reported on its own only when its entity has one owner who does not hold it"
+    },
+    {
+      "rule": "missing-owner",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 36,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:36",
+      "found": "order.shippingAddress is held by 2 systems, erp and wms, and none owns it; shop, the owner of order, does not hold it",
+      "basis": [
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        },
+        {
+          "text": "organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them",
+          "source": "Master data management (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Master_data_management"
+        }
+      ],
+      "own": "an entity held by two or more systems needs an owner of its own even when each of its fields has one, because someone must decide which record is the customer; a field is reported on its own only when its entity has one owner who does not hold it"
+    },
+    {
+      "rule": "conflicting-owner",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 50,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:50",
+      "found": "product.listPrice is claimed as owned by 2 systems, erp and shop; name one system of record",
+      "basis": [
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        },
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        }
+      ],
+      "own": "a claim on a field comes before a claim on its entity, so a field owner inside an entity owned by another system is not a conflict"
+    },
+    {
+      "rule": "write-back",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 71,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:71",
+      "found": "the flow credit-sync (two-way) writes customer.creditLimit from crm into erp, which owns that field; the owner should be the source",
+      "basis": [
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        },
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        }
+      ],
+      "own": "a flow that passes on a copy from a system that does not own it is reported too, because the target is then fed from a copy and not from the owner; a flow marked as an exception counts as approved only with a reason that is not empty or TBD"
+    },
+    {
+      "rule": "write-back",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 86,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:86",
+      "found": "the flow email-shop-to-crm writes customer.email from shop into crm, which owns that field; the owner should be the source; it is marked as an exception but gives no reason",
+      "basis": [
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        },
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        }
+      ],
+      "own": "a flow that passes on a copy from a system that does not own it is reported too, because the target is then fed from a copy and not from the owner; a flow marked as an exception counts as approved only with a reason that is not empty or TBD"
+    },
+    {
+      "rule": "write-back",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 109,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:109",
+      "found": "the flow order-erp-to-wms passes order.number from erp to wms, but shop owns that field; feed wms from shop",
+      "basis": [
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        },
+        {
+          "text": "a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        }
+      ],
+      "own": "a flow that passes on a copy from a system that does not own it is reported too, because the target is then fed from a copy and not from the owner; a flow marked as an exception counts as approved only with a reason that is not empty or TBD"
+    },
+    {
+      "rule": "unknown-reference",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 116,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:116",
+      "found": "the target of stock-wms-to-shop, shop, does not hold product.stockLevel",
+      "basis": [
+        {
+          "text": "data can be trusted when it can be traced back to a known good source, which a link to a system that is not described cannot give",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        }
+      ],
+      "own": null
+    },
+    {
+      "rule": "unknown-reference",
+      "level": "error",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 123,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:123",
+      "found": "the flow invoice-erp-to-billing names the target \"billing\", which is not a system of the map",
+      "basis": [
+        {
+          "text": "data can be trusted when it can be traced back to a known good source, which a link to a system that is not described cannot give",
+          "source": "System of record (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/System_of_record"
+        }
+      ],
+      "own": null
+    },
+    {
+      "rule": "system-without-owner",
+      "level": "warning",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 15,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:15",
+      "found": "the system legacy-crm has no team and no contact (\"TBD\" names no one), so no one answers for the data it holds",
+      "basis": [
+        {
+          "text": "master data management names roles such as data owners and data stewards, so that someone is accountable for each set of data",
+          "source": "Master data management (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Master_data_management"
+        },
+        {
+          "text": "a data steward keeps the definitions and the sources of authority of the data documented and is the contact for questions about it",
+          "source": "Data steward (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Data_steward"
+        }
+      ],
+      "own": null
+    },
+    {
+      "rule": "system-without-owner",
+      "level": "warning",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 55,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:55",
+      "found": "the system wms has no contact, so no one answers for the data it holds",
+      "basis": [
+        {
+          "text": "master data management names roles such as data owners and data stewards, so that someone is accountable for each set of data",
+          "source": "Master data management (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Master_data_management"
+        },
+        {
+          "text": "a data steward keeps the definitions and the sources of authority of the data documented and is the contact for questions about it",
+          "source": "Data steward (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Data_steward"
+        }
+      ],
+      "own": null
+    },
+    {
+      "rule": "unfed-copy",
+      "level": "warning",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 60,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:60",
+      "found": "wms holds product.sku and product.name, owned by erp, and no flow from erp feeds them; the copy can drift from its owner",
+      "basis": [
+        {
+          "text": "when the same data is kept in more than one place, the copies can come to hold different values for the same thing",
+          "source": "Data redundancy (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Data_redundancy"
+        },
+        {
+          "text": "organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them",
+          "source": "Master data management (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Master_data_management"
+        }
+      ],
+      "own": "only a flow straight from the owner counts as a feed; a copy fed through another copy is still reported"
+    },
+    {
+      "rule": "unfed-copy",
+      "level": "warning",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 61,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:61",
+      "found": "wms holds order.number, owned by shop, and no flow from shop feeds it; the copy can drift from its owner",
+      "basis": [
+        {
+          "text": "when the same data is kept in more than one place, the copies can come to hold different values for the same thing",
+          "source": "Data redundancy (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Data_redundancy"
+        },
+        {
+          "text": "organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them",
+          "source": "Master data management (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Master_data_management"
+        }
+      ],
+      "own": "only a flow straight from the owner counts as a feed; a copy fed through another copy is still reported"
+    },
+    {
+      "rule": "circular-sync",
+      "level": "warning",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 71,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:71",
+      "found": "customer.creditLimit goes both ways between crm and erp through the two-way flow credit-sync; each side can overwrite the other",
+      "basis": [
+        {
+          "text": "synchronisation keeps a source and a target consistent over time, and when more than one copy is changed the changes have to be reconciled",
+          "source": "Data synchronization (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Data_synchronization"
+        },
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        }
+      ],
+      "own": "a loop in which one of the flows is an approved exception is not reported, because the reason of the exception says why the field goes both ways"
+    },
+    {
+      "rule": "circular-sync",
+      "level": "warning",
+      "file": "examples/messy/integration-map.yaml",
+      "line": 86,
+      "column": null,
+      "at": "examples/messy/integration-map.yaml:86",
+      "found": "customer.email goes both ways between crm and shop through the flows email-crm-to-shop and email-shop-to-crm; each side can overwrite the other",
+      "basis": [
+        {
+          "text": "synchronisation keeps a source and a target consistent over time, and when more than one copy is changed the changes have to be reconciled",
+          "source": "Data synchronization (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Data_synchronization"
+        },
+        {
+          "text": "each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own",
+          "source": "Single source of truth (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Single_source_of_truth"
+        }
+      ],
+      "own": "a loop in which one of the flows is an approved exception is not reported, because the reason of the exception says why the field goes both ways"
+    }
+  ],
+  "totals": {
+    "findings": 15,
+    "byLevel": {
+      "error": 9,
+      "warning": 6,
+      "notice": 0
+    },
+    "hidden": 0,
+    "notListed": 0
+  },
+  "result": {
+    "pass": false,
+    "errors": 9,
+    "byLevel": {
+      "error": 9,
+      "warning": 6,
+      "notice": 0
+    },
+    "text": "FAIL - 9 errors (and 6 warnings)"
+  },
+  "notes": [],
+  "notice": "This report checks the integration map only: which system it names as the owner of each entity and field, and the flows it lists. It does not connect to the systems or compare the data they hold."
+}

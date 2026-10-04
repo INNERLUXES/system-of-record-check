@@ -1,0 +1,5 @@
+{
+  "name": "Kestrel Valley integration rules",
+  "modes": { "add": ["sftp"] },
+  "rules": { "unfedCopy": "error", "circularSync": "error" }
+}

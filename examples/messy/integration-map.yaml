@@ -1,0 +1,128 @@
+# Integration map of Fernbrook Supply, kept by the integration team.
+name: Fernbrook Supply integration map
+
+systems:
+  crm:
+    name: Sales CRM
+    kind: crm
+    team: Sales operations
+    contact: sales-ops channel
+    entities:
+      customer:
+        fields: [accountNumber, legalName, email, phone, creditLimit]
+        owns: true
+
+  legacy-crm:
+    name: Old CRM, still used by the trade counter
+    kind: crm
+    contact: TBD
+    entities:
+      customer:
+        fields: [accountNumber, legalName, phone]
+        owns: true
+
+  erp:
+    name: Finance ERP
+    kind: erp
+    team: Finance systems
+    contact: finance-systems channel
+    entities:
+      customer:
+        fields: [accountNumber, legalName, creditLimit]
+        owns: [creditLimit]
+      product:
+        fields: [sku, name, listPrice]
+        owns: [sku, name, listPrice]
+      order: [number, total, shippingAddress]
+      invoice:
+        fields: [number, total, dueDate]
+        owns: true
+
+  shop:
+    name: Web shop
+    kind: commerce
+    team: Digital commerce
+    contact: web-shop channel
+    entities:
+      customer: [email]
+      product:
+        fields: [sku, name, listPrice, description]
+        owns: [listPrice, description]
+      order:
+        fields: [number, total]
+        owns: true
+
+  wms:
+    name: Warehouse system
+    kind: warehouse
+    team: Warehouse operations
+    entities:
+      product: [sku, name, weight, stockLevel]
+      order: [number, shippingAddress]
+
+flows:
+  - id: customer-crm-to-erp
+    source: crm
+    target: erp
+    entity: customer
+    fields: [accountNumber, legalName]
+    mode: event
+
+  - id: credit-sync
+    source: erp
+    target: crm
+    entity: customer
+    fields: [creditLimit]
+    direction: two-way
+    mode: api
+
+  - id: email-crm-to-shop
+    source: crm
+    target: shop
+    entity: customer
+    fields: [email]
+    mode: api
+
+  - id: email-shop-to-crm
+    source: shop
+    target: crm
+    entity: customer
+    fields: [email]
+    mode: api
+    exception:
+      reason: TBD
+
+  - id: product-erp-to-shop
+    source: erp
+    target: shop
+    entity: product
+    fields: [sku, name]
+    mode: batch
+
+  - id: order-shop-to-erp
+    source: shop
+    target: erp
+    entity: order
+    fields: [number, total]
+    mode: event
+
+  - id: order-erp-to-wms
+    source: erp
+    target: wms
+    entity: order
+    fields: [number, shippingAddress]
+    mode: batch
+
+  - id: stock-wms-to-shop
+    source: wms
+    target: shop
+    entity: product
+    fields: [stockLevel]
+    mode: event
+
+  - id: invoice-erp-to-billing
+    source: erp
+    target: billing
+    entity: invoice
+    fields: [number, total]
+    mode: file

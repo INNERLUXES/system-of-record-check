@@ -1,0 +1,20 @@
+system-of-record-check: examples/clean/integration-map.json
+input: examples/clean/integration-map.json (JSON; 4 systems, 5 entities, 21 fields, 7 flows)
+config: examples/config.json (Kestrel Valley integration rules): modes api, batch, event, file, manual, cdc, etl, sftp; systems name a team and a contact; minimum severity notice
+rules: missing-owner (error); conflicting-owner (error); write-back (error); unfed-copy (error); unknown-reference (error); circular-sync (error); system-without-owner (warning)
+findings: 0
+
+Findings (0)
+
+  none
+
+Map: examples/clean/integration-map.json ("Kestrel Valley Outdoor integration map")
+
+  systems   4: crm, erp, shop and hr; 0 without a team or a contact
+  entities  5: customer (owner crm), product (owner erp), order (owner shop), invoice (owner erp) and employee (owner hr)
+  fields    21 held, 13 held by two or more systems: 13 with one owner, 0 with no owner, 0 with two owners or more
+  flows     7: 3 batch, 2 api and 2 event; 0 two-way; 1 approved exception
+
+This report checks the integration map only: which system it names as the owner of each entity and field, and the flows it lists. It does not connect to the systems or compare the data they hold.
+
+RESULT: PASS - no error

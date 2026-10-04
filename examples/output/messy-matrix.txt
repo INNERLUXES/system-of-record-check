@@ -1,0 +1,28 @@
+system-of-record-check: examples/messy/integration-map.yaml
+ownership matrix: 5 systems, 4 entities, 17 fields; O owner (system of record), C copy, . not held
+
+                        crm  legacy-crm  erp  shop  wms
+customer                O    O           C    C     .    2 owners
+customer.accountNumber  O    O           C    .     .    2 owners
+customer.legalName      O    O           C    .     .    2 owners
+customer.email          O    .           .    C     .
+customer.phone          O    O           .    .     .    2 owners
+customer.creditLimit    C    .           O    .     .
+product                 .    .           C    C     C    no owner
+product.sku             .    .           O    C     C
+product.name            .    .           O    C     C
+product.listPrice       .    .           O    O     .    2 owners
+product.description     .    .           .    O     .
+product.weight          .    .           .    .     C
+product.stockLevel      .    .           .    .     C
+order                   .    .           C    O     C
+order.number            .    .           C    O     C
+order.total             .    .           C    O     .
+order.shippingAddress   .    .           C    .     C    no owner
+invoice                 .    .           O    .     .
+invoice.number          .    .           O    .     .
+invoice.total           .    .           O    .     .
+invoice.dueDate         .    .           O    .     .
+
+findings: 15 (9 error, 6 warning); run without --matrix for the report
+RESULT: FAIL - 9 errors (and 6 warnings)

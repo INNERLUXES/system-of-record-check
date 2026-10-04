@@ -1,0 +1,16 @@
+::error file=examples/messy/integration-map.yaml,line=22,title=system-of-record-check conflicting-owner::the entity customer is claimed as owned by 2 systems, crm and legacy-crm; name one system of record
+::error file=examples/messy/integration-map.yaml,line=33,title=system-of-record-check missing-owner::the entity product is held by 3 systems, erp, shop and wms, and none owns it; mark its system of record with "owns: true"
+::error file=examples/messy/integration-map.yaml,line=36,title=system-of-record-check missing-owner::order.shippingAddress is held by 2 systems, erp and wms, and none owns it; shop, the owner of order, does not hold it
+::error file=examples/messy/integration-map.yaml,line=50,title=system-of-record-check conflicting-owner::product.listPrice is claimed as owned by 2 systems, erp and shop; name one system of record
+::error file=examples/messy/integration-map.yaml,line=71,title=system-of-record-check write-back::the flow credit-sync (two-way) writes customer.creditLimit from crm into erp, which owns that field; the owner should be the source
+::error file=examples/messy/integration-map.yaml,line=86,title=system-of-record-check write-back::the flow email-shop-to-crm writes customer.email from shop into crm, which owns that field; the owner should be the source; it is marked as an exception but gives no reason
+::error file=examples/messy/integration-map.yaml,line=109,title=system-of-record-check write-back::the flow order-erp-to-wms passes order.number from erp to wms, but shop owns that field; feed wms from shop
+::error file=examples/messy/integration-map.yaml,line=116,title=system-of-record-check unknown-reference::the target of stock-wms-to-shop, shop, does not hold product.stockLevel
+::error file=examples/messy/integration-map.yaml,line=123,title=system-of-record-check unknown-reference::the flow invoice-erp-to-billing names the target "billing", which is not a system of the map
+::warning file=examples/messy/integration-map.yaml,line=15,title=system-of-record-check system-without-owner::the system legacy-crm has no team and no contact ("TBD" names no one), so no one answers for the data it holds
+::warning file=examples/messy/integration-map.yaml,line=55,title=system-of-record-check system-without-owner::the system wms has no contact, so no one answers for the data it holds
+::warning file=examples/messy/integration-map.yaml,line=60,title=system-of-record-check unfed-copy::wms holds product.sku and product.name, owned by erp, and no flow from erp feeds them; the copy can drift from its owner
+::warning file=examples/messy/integration-map.yaml,line=61,title=system-of-record-check unfed-copy::wms holds order.number, owned by shop, and no flow from shop feeds it; the copy can drift from its owner
+::warning file=examples/messy/integration-map.yaml,line=71,title=system-of-record-check circular-sync::customer.creditLimit goes both ways between crm and erp through the two-way flow credit-sync; each side can overwrite the other
+::warning file=examples/messy/integration-map.yaml,line=86,title=system-of-record-check circular-sync::customer.email goes both ways between crm and shop through the flows email-crm-to-shop and email-shop-to-crm; each side can overwrite the other
+system-of-record-check: examples/messy/integration-map.yaml: 15 findings; RESULT: FAIL - 9 errors (and 6 warnings)

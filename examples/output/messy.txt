@@ -1,0 +1,63 @@
+system-of-record-check: examples/messy/integration-map.yaml
+input: examples/messy/integration-map.yaml (YAML; 5 systems, 4 entities, 17 fields, 9 flows)
+config: built-in defaults: modes api, batch, event, file, manual, cdc, etl; systems name a team and a contact; minimum severity notice
+rules: missing-owner (error); conflicting-owner (error); write-back (error); unfed-copy (warning); unknown-reference (error); circular-sync (warning); system-without-owner (warning)
+findings: 15 (9 error, 6 warning)
+
+Findings (15)
+
+  ERROR    conflicting-owner     examples/messy/integration-map.yaml:22
+           the entity customer is claimed as owned by 2 systems, crm and legacy-crm; name one system of record
+
+  ERROR    missing-owner         examples/messy/integration-map.yaml:33
+           the entity product is held by 3 systems, erp, shop and wms, and none owns it; mark its system of record with "owns: true"
+
+  ERROR    missing-owner         examples/messy/integration-map.yaml:36
+           order.shippingAddress is held by 2 systems, erp and wms, and none owns it; shop, the owner of order, does not hold it
+
+  ERROR    conflicting-owner     examples/messy/integration-map.yaml:50
+           product.listPrice is claimed as owned by 2 systems, erp and shop; name one system of record
+
+  ERROR    write-back            examples/messy/integration-map.yaml:71
+           the flow credit-sync (two-way) writes customer.creditLimit from crm into erp, which owns that field; the owner should be the source
+
+  ERROR    write-back            examples/messy/integration-map.yaml:86
+           the flow email-shop-to-crm writes customer.email from shop into crm, which owns that field; the owner should be the source; it is marked as an exception but gives no reason
+
+  ERROR    write-back            examples/messy/integration-map.yaml:109
+           the flow order-erp-to-wms passes order.number from erp to wms, but shop owns that field; feed wms from shop
+
+  ERROR    unknown-reference     examples/messy/integration-map.yaml:116
+           the target of stock-wms-to-shop, shop, does not hold product.stockLevel
+
+  ERROR    unknown-reference     examples/messy/integration-map.yaml:123
+           the flow invoice-erp-to-billing names the target "billing", which is not a system of the map
+
+  WARNING  system-without-owner  examples/messy/integration-map.yaml:15
+           the system legacy-crm has no team and no contact ("TBD" names no one), so no one answers for the data it holds
+
+  WARNING  system-without-owner  examples/messy/integration-map.yaml:55
+           the system wms has no contact, so no one answers for the data it holds
+
+  WARNING  unfed-copy            examples/messy/integration-map.yaml:60
+           wms holds product.sku and product.name, owned by erp, and no flow from erp feeds them; the copy can drift from its owner
+
+  WARNING  unfed-copy            examples/messy/integration-map.yaml:61
+           wms holds order.number, owned by shop, and no flow from shop feeds it; the copy can drift from its owner
+
+  WARNING  circular-sync         examples/messy/integration-map.yaml:71
+           customer.creditLimit goes both ways between crm and erp through the two-way flow credit-sync; each side can overwrite the other
+
+  WARNING  circular-sync         examples/messy/integration-map.yaml:86
+           customer.email goes both ways between crm and shop through the flows email-crm-to-shop and email-shop-to-crm; each side can overwrite the other
+
+Map: examples/messy/integration-map.yaml ("Fernbrook Supply integration map")
+
+  systems   5: crm, legacy-crm, erp, shop and wms; 2 without a team or a contact
+  entities  4: customer (2 owners), product (no owner), order (owner shop) and invoice (owner erp)
+  fields    17 held, 11 held by two or more systems: 6 with one owner, 1 with no owner, 4 with two owners or more
+  flows     9: 3 api, 3 event, 2 batch and 1 file; 1 two-way; 0 approved exceptions
+
+This report checks the integration map only: which system it names as the owner of each entity and field, and the flows it lists. It does not connect to the systems or compare the data they hold.
+
+RESULT: FAIL - 9 errors (and 6 warnings)

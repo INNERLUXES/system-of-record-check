@@ -1,0 +1,73 @@
+{
+  "name": "Kestrel Valley Outdoor integration map",
+  "systems": {
+    "crm": {
+      "name": "Sales CRM",
+      "kind": "crm",
+      "team": "Sales operations",
+      "contact": "sales-ops channel",
+      "entities": {
+        "customer": {
+          "fields": ["accountNumber", "legalName", "email", "phone", "segment", "creditLimit"],
+          "owns": true
+        }
+      }
+    },
+    "erp": {
+      "name": "Finance ERP",
+      "kind": "erp",
+      "team": "Finance systems",
+      "contact": "finance-systems channel",
+      "entities": {
+        "customer": {
+          "fields": ["accountNumber", "legalName", "creditLimit", "paymentTerms"],
+          "owns": ["creditLimit", "paymentTerms"]
+        },
+        "product": { "fields": ["sku", "name", "listPrice"], "owns": true },
+        "order": ["number", "customerAccount", "total"],
+        "invoice": { "fields": ["number", "customerAccount", "total", "dueDate"], "owns": true },
+        "employee": ["employeeId", "costCentre"]
+      }
+    },
+    "shop": {
+      "name": "Web shop",
+      "kind": "commerce",
+      "team": "Digital commerce",
+      "contact": "web-shop channel",
+      "entities": {
+        "customer": ["accountNumber", "email", "segment"],
+        "product": ["sku", "name", "listPrice"],
+        "order": { "fields": ["number", "customerAccount", "total"], "owns": true }
+      }
+    },
+    "hr": {
+      "name": "People system",
+      "kind": "hr",
+      "team": "People systems",
+      "contact": "people-systems channel",
+      "entities": {
+        "employee": { "fields": ["employeeId", "fullName", "workEmail", "costCentre"], "owns": true }
+      }
+    }
+  },
+  "flows": [
+    { "id": "customer-crm-to-erp", "source": "crm", "target": "erp", "entity": "customer", "fields": ["accountNumber", "legalName"], "mode": "event" },
+    { "id": "customer-crm-to-shop", "source": "crm", "target": "shop", "entity": "customer", "fields": ["accountNumber", "email", "segment"], "mode": "api" },
+    { "id": "credit-erp-to-crm", "source": "erp", "target": "crm", "entity": "customer", "fields": ["creditLimit"], "mode": "batch" },
+    { "id": "product-erp-to-shop", "source": "erp", "target": "shop", "entity": "product", "fields": ["sku", "name", "listPrice"], "mode": "batch" },
+    { "id": "order-shop-to-erp", "source": "shop", "target": "erp", "entity": "order", "fields": ["number", "customerAccount", "total"], "mode": "event" },
+    { "id": "employee-hr-to-erp", "source": "hr", "target": "erp", "entity": "employee", "fields": ["employeeId", "costCentre"], "mode": "batch" },
+    {
+      "id": "email-shop-to-crm",
+      "source": "shop",
+      "target": "crm",
+      "entity": "customer",
+      "fields": ["email"],
+      "mode": "api",
+      "exception": {
+        "reason": "Customers change their email address on the account page of the web shop; the CRM takes these changes until that page moves into the customer portal.",
+        "approvedBy": "Sales operations"
+      }
+    }
+  ]
+}

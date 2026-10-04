@@ -1,0 +1,117 @@
+system-of-record-check: examples/messy/integration-map.yaml
+input: examples/messy/integration-map.yaml (YAML; 5 systems, 4 entities, 17 fields, 9 flows)
+config: built-in defaults: modes api, batch, event, file, manual, cdc, etl; systems name a team and a contact; minimum severity notice
+rules: missing-owner (error); conflicting-owner (error); write-back (error); unfed-copy (warning); unknown-reference (error); circular-sync (warning); system-without-owner (warning)
+findings: 15 (9 error, 6 warning)
+
+Findings (15)
+
+  ERROR    conflicting-owner     examples/messy/integration-map.yaml:22
+           the entity customer is claimed as owned by 2 systems, crm and legacy-crm; name one system of record
+           rule: an entity that two or more systems claim with "owns: true", or a field that two or more systems name in "owns"
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           the tool's own choice: a claim on a field comes before a claim on its entity, so a field owner inside an entity owned by another system is not a conflict
+
+  ERROR    missing-owner         examples/messy/integration-map.yaml:33
+           the entity product is held by 3 systems, erp, shop and wms, and none owns it; mark its system of record with "owns: true"
+           rule: an entity held by two or more systems that no system claims with "owns: true", or a field held by two or more systems that no system claims and the owner of its entity does not hold
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           basis: organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them (Master data management (Wikipedia), https://en.wikipedia.org/wiki/Master_data_management)
+           the tool's own choice: an entity held by two or more systems needs an owner of its own even when each of its fields has one, because someone must decide which record is the customer; a field is reported on its own only when its entity has one owner who does not hold it
+
+  ERROR    missing-owner         examples/messy/integration-map.yaml:36
+           order.shippingAddress is held by 2 systems, erp and wms, and none owns it; shop, the owner of order, does not hold it
+           rule: an entity held by two or more systems that no system claims with "owns: true", or a field held by two or more systems that no system claims and the owner of its entity does not hold
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           basis: organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them (Master data management (Wikipedia), https://en.wikipedia.org/wiki/Master_data_management)
+           the tool's own choice: an entity held by two or more systems needs an owner of its own even when each of its fields has one, because someone must decide which record is the customer; a field is reported on its own only when its entity has one owner who does not hold it
+
+  ERROR    conflicting-owner     examples/messy/integration-map.yaml:50
+           product.listPrice is claimed as owned by 2 systems, erp and shop; name one system of record
+           rule: an entity that two or more systems claim with "owns: true", or a field that two or more systems name in "owns"
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           the tool's own choice: a claim on a field comes before a claim on its entity, so a field owner inside an entity owned by another system is not a conflict
+
+  ERROR    write-back            examples/messy/integration-map.yaml:71
+           the flow credit-sync (two-way) writes customer.creditLimit from crm into erp, which owns that field; the owner should be the source
+           rule: a flow, or the return way of a two-way flow, that carries a field held by both its ends whose one owner is not the system it comes from, unless the flow has an exception with a reason that is not empty or one of "tbd", "tba", "todo"
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           the tool's own choice: a flow that passes on a copy from a system that does not own it is reported too, because the target is then fed from a copy and not from the owner; a flow marked as an exception counts as approved only with a reason that is not empty or TBD
+
+  ERROR    write-back            examples/messy/integration-map.yaml:86
+           the flow email-shop-to-crm writes customer.email from shop into crm, which owns that field; the owner should be the source; it is marked as an exception but gives no reason
+           rule: a flow, or the return way of a two-way flow, that carries a field held by both its ends whose one owner is not the system it comes from, unless the flow has an exception with a reason that is not empty or one of "tbd", "tba", "todo"
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           the tool's own choice: a flow that passes on a copy from a system that does not own it is reported too, because the target is then fed from a copy and not from the owner; a flow marked as an exception counts as approved only with a reason that is not empty or TBD
+
+  ERROR    write-back            examples/messy/integration-map.yaml:109
+           the flow order-erp-to-wms passes order.number from erp to wms, but shop owns that field; feed wms from shop
+           rule: a flow, or the return way of a two-way flow, that carries a field held by both its ends whose one owner is not the system it comes from, unless the flow has an exception with a reason that is not empty or one of "tbd", "tba", "todo"
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           basis: a system of record is the one source that counts as authoritative for a given piece of data, and naming it settles which copy wins when systems disagree (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+           the tool's own choice: a flow that passes on a copy from a system that does not own it is reported too, because the target is then fed from a copy and not from the owner; a flow marked as an exception counts as approved only with a reason that is not empty or TBD
+
+  ERROR    unknown-reference     examples/messy/integration-map.yaml:116
+           the target of stock-wms-to-shop, shop, does not hold product.stockLevel
+           rule: a flow whose source or target is not a system of the map, whose entity no system holds or one of its ends does not hold, or whose fields one of its ends does not hold
+           basis: data can be trusted when it can be traced back to a known good source, which a link to a system that is not described cannot give (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+
+  ERROR    unknown-reference     examples/messy/integration-map.yaml:123
+           the flow invoice-erp-to-billing names the target "billing", which is not a system of the map
+           rule: a flow whose source or target is not a system of the map, whose entity no system holds or one of its ends does not hold, or whose fields one of its ends does not hold
+           basis: data can be trusted when it can be traced back to a known good source, which a link to a system that is not described cannot give (System of record (Wikipedia), https://en.wikipedia.org/wiki/System_of_record)
+
+  WARNING  system-without-owner  examples/messy/integration-map.yaml:15
+           the system legacy-crm has no team and no contact ("TBD" names no one), so no one answers for the data it holds
+           rule: a system whose team or contact is missing, empty or a value that names no one
+           basis: master data management names roles such as data owners and data stewards, so that someone is accountable for each set of data (Master data management (Wikipedia), https://en.wikipedia.org/wiki/Master_data_management)
+           basis: a data steward keeps the definitions and the sources of authority of the data documented and is the contact for questions about it (Data steward (Wikipedia), https://en.wikipedia.org/wiki/Data_steward)
+
+  WARNING  system-without-owner  examples/messy/integration-map.yaml:55
+           the system wms has no contact, so no one answers for the data it holds
+           rule: a system whose team or contact is missing, empty or a value that names no one
+           basis: master data management names roles such as data owners and data stewards, so that someone is accountable for each set of data (Master data management (Wikipedia), https://en.wikipedia.org/wiki/Master_data_management)
+           basis: a data steward keeps the definitions and the sources of authority of the data documented and is the contact for questions about it (Data steward (Wikipedia), https://en.wikipedia.org/wiki/Data_steward)
+
+  WARNING  unfed-copy            examples/messy/integration-map.yaml:60
+           wms holds product.sku and product.name, owned by erp, and no flow from erp feeds them; the copy can drift from its owner
+           rule: a field with one owner, held by another system that is not the target of any flow from the owner that carries the field
+           basis: when the same data is kept in more than one place, the copies can come to hold different values for the same thing (Data redundancy (Wikipedia), https://en.wikipedia.org/wiki/Data_redundancy)
+           basis: organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them (Master data management (Wikipedia), https://en.wikipedia.org/wiki/Master_data_management)
+           the tool's own choice: only a flow straight from the owner counts as a feed; a copy fed through another copy is still reported
+
+  WARNING  unfed-copy            examples/messy/integration-map.yaml:61
+           wms holds order.number, owned by shop, and no flow from shop feeds it; the copy can drift from its owner
+           rule: a field with one owner, held by another system that is not the target of any flow from the owner that carries the field
+           basis: when the same data is kept in more than one place, the copies can come to hold different values for the same thing (Data redundancy (Wikipedia), https://en.wikipedia.org/wiki/Data_redundancy)
+           basis: organisations keep many copies of the same data in separate systems, and master data management exists to keep that data consistent and accurate across all of them (Master data management (Wikipedia), https://en.wikipedia.org/wiki/Master_data_management)
+           the tool's own choice: only a flow straight from the owner counts as a feed; a copy fed through another copy is still reported
+
+  WARNING  circular-sync         examples/messy/integration-map.yaml:71
+           customer.creditLimit goes both ways between crm and erp through the two-way flow credit-sync; each side can overwrite the other
+           rule: a field that flows from one system to another and back, through a two-way flow or two one-way flows, with no approved exception among them
+           basis: synchronisation keeps a source and a target consistent over time, and when more than one copy is changed the changes have to be reconciled (Data synchronization (Wikipedia), https://en.wikipedia.org/wiki/Data_synchronization)
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           the tool's own choice: a loop in which one of the flows is an approved exception is not reported, because the reason of the exception says why the field goes both ways
+
+  WARNING  circular-sync         examples/messy/integration-map.yaml:86
+           customer.email goes both ways between crm and shop through the flows email-crm-to-shop and email-shop-to-crm; each side can overwrite the other
+           rule: a field that flows from one system to another and back, through a two-way flow or two one-way flows, with no approved exception among them
+           basis: synchronisation keeps a source and a target consistent over time, and when more than one copy is changed the changes have to be reconciled (Data synchronization (Wikipedia), https://en.wikipedia.org/wiki/Data_synchronization)
+           basis: each data element is mastered, or edited, in one place only, and the other places read or refer to that one instead of changing a copy of their own (Single source of truth (Wikipedia), https://en.wikipedia.org/wiki/Single_source_of_truth)
+           the tool's own choice: a loop in which one of the flows is an approved exception is not reported, because the reason of the exception says why the field goes both ways
+
+Map: examples/messy/integration-map.yaml ("Fernbrook Supply integration map")
+
+  systems   5: crm, legacy-crm, erp, shop and wms; 2 without a team or a contact
+  entities  4: customer (2 owners), product (no owner), order (owner shop) and invoice (owner erp)
+  fields    17 held, 11 held by two or more systems: 6 with one owner, 1 with no owner, 4 with two owners or more
+  flows     9: 3 api, 3 event, 2 batch and 1 file; 1 two-way; 0 approved exceptions
+
+This report checks the integration map only: which system it names as the owner of each entity and field, and the flows it lists. It does not connect to the systems or compare the data they hold.
+
+RESULT: FAIL - 9 errors (and 6 warnings)
