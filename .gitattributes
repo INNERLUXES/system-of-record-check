@@ -1,0 +1,7 @@
+* text=auto eol=lf
+# The example maps are kept byte for byte as written, so a test can read them with LF and with CRLF line ends.
+examples/clean/** -text
+examples/messy/** -text
+examples/config.json -text
+# The example output is kept as the tool writes it.
+examples/output/** -text

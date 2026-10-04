@@ -1,0 +1,49 @@
+{
+  "name": "system-of-record-check",
+  "version": "1.0.0",
+  "description": "Checks an integration map in JSON or a subset of YAML that lists enterprise systems, the entities and fields each holds, the system of record of each, and the data flows between them: shared data with no owner or two owners, flows that write into a record another system owns, copies that no flow from the owner feeds, flows that name unknown systems, entities or fields, fields synced both ways, and systems with no team or contact. Text, JSON and GitHub annotation output, an ownership matrix, exit codes for a pipeline, no dependencies.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "system-of-record-check": "bin/system-of-record-check.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "examples",
+    "research",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "test:coverage": "node --test --experimental-test-coverage \"test/*.test.js\"",
+    "check": "node tools/check.mjs",
+    "example": "node tools/example.mjs"
+  },
+  "keywords": [
+    "system-of-record",
+    "master-data",
+    "enterprise-integration",
+    "data-ownership",
+    "erp",
+    "crm",
+    "linter",
+    "ci",
+    "cli"
+  ],
+  "author": "INNERLUXES <info@innerluxes.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/INNERLUXES/system-of-record-check.git"
+  },
+  "homepage": "https://innerluxes.dev/software-development/enterprise/solutions"
+}
